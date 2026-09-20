@@ -1,0 +1,182 @@
+{
+  "recommended_thresholds": {
+    "low_risk_ceiling": 0.35,
+    "high_risk_floor": 0.7
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.15,
+      "precision": 0.8889,
+      "recall": 1.0,
+      "f1_score": 0.9412,
+      "fpr_pct": 0.15,
+      "fnr_pct": 0.0,
+      "tp": 144,
+      "fp": 18,
+      "tn": 11838,
+      "fn": 0,
+      "tier": "LOW (Auto-Approve)"
+    },
+    {
+      "threshold": 0.2,
+      "precision": 0.9057,
+      "recall": 1.0,
+      "f1_score": 0.9505,
+      "fpr_pct": 0.13,
+      "fnr_pct": 0.0,
+      "tp": 144,
+      "fp": 15,
+      "tn": 11841,
+      "fn": 0,
+      "tier": "LOW (Auto-Approve)"
+    },
+    {
+      "threshold": 0.25,
+      "precision": 0.9172,
+      "recall": 1.0,
+      "f1_score": 0.9568,
+      "fpr_pct": 0.11,
+      "fnr_pct": 0.0,
+      "tp": 144,
+      "fp": 13,
+      "tn": 11843,
+      "fn": 0,
+      "tier": "LOW (Auto-Approve)"
+    },
+    {
+      "threshold": 0.3,
+      "precision": 0.929,
+      "recall": 1.0,
+      "f1_score": 0.9632,
+      "fpr_pct": 0.09,
+      "fnr_pct": 0.0,
+      "tp": 144,
+      "fp": 11,
+      "tn": 11845,
+      "fn": 0,
+      "tier": "LOW (Auto-Approve)"
+    },
+    {
+      "threshold": 0.35,
+      "precision": 0.9342,
+      "recall": 0.9861,
+      "f1_score": 0.9595,
+      "fpr_pct": 0.08,
+      "fnr_pct": 1.39,
+      "tp": 142,
+      "fp": 10,
+      "tn": 11846,
+      "fn": 2,
+      "tier": "REVIEW (Soft Block/MFA)"
+    },
+    {
+      "threshold": 0.4,
+      "precision": 0.9467,
+      "recall": 0.9861,
+      "f1_score": 0.966,
+      "fpr_pct": 0.07,
+      "fnr_pct": 1.39,
+      "tp": 142,
+      "fp": 8,
+      "tn": 11848,
+      "fn": 2,
+      "tier": "REVIEW (Soft Block/MFA)"
+    },
+    {
+      "threshold": 0.5,
+      "precision": 0.9793,
+      "recall": 0.9861,
+      "f1_score": 0.9827,
+      "fpr_pct": 0.03,
+      "fnr_pct": 1.39,
+      "tp": 142,
+      "fp": 3,
+      "tn": 11853,
+      "fn": 2,
+      "tier": "REVIEW (Soft Block/MFA)"
+    },
+    {
+      "threshold": 0.6,
+      "precision": 0.993,
+      "recall": 0.9861,
+      "f1_score": 0.9895,
+      "fpr_pct": 0.01,
+      "fnr_pct": 1.39,
+      "tp": 142,
+      "fp": 1,
+      "tn": 11855,
+      "fn": 2,
+      "tier": "REVIEW (Soft Block/MFA)"
+    },
+    {
+      "threshold": 0.65,
+      "precision": 0.993,
+      "recall": 0.9792,
+      "f1_score": 0.986,
+      "fpr_pct": 0.01,
+      "fnr_pct": 2.08,
+      "tp": 141,
+      "fp": 1,
+      "tn": 11855,
+      "fn": 3,
+      "tier": "REVIEW (Soft Block/MFA)"
+    },
+    {
+      "threshold": 0.7,
+      "precision": 0.9929,
+      "recall": 0.9722,
+      "f1_score": 0.9825,
+      "fpr_pct": 0.01,
+      "fnr_pct": 2.78,
+      "tp": 140,
+      "fp": 1,
+      "tn": 11855,
+      "fn": 4,
+      "tier": "HIGH (Immediate Block/MFA)"
+    },
+    {
+      "threshold": 0.75,
+      "precision": 0.9929,
+      "recall": 0.9722,
+      "f1_score": 0.9825,
+      "fpr_pct": 0.01,
+      "fnr_pct": 2.78,
+      "tp": 140,
+      "fp": 1,
+      "tn": 11855,
+      "fn": 4,
+      "tier": "HIGH (Immediate Block/MFA)"
+    },
+    {
+      "threshold": 0.8,
+      "precision": 0.9929,
+      "recall": 0.9722,
+      "f1_score": 0.9825,
+      "fpr_pct": 0.01,
+      "fnr_pct": 2.78,
+      "tp": 140,
+      "fp": 1,
+      "tn": 11855,
+      "fn": 4,
+      "tier": "HIGH (Immediate Block/MFA)"
+    },
+    {
+      "threshold": 0.85,
+      "precision": 0.9929,
+      "recall": 0.9722,
+      "f1_score": 0.9825,
+      "fpr_pct": 0.01,
+      "fnr_pct": 2.78,
+      "tp": 140,
+      "fp": 1,
+      "tn": 11855,
+      "fn": 4,
+      "tier": "HIGH (Immediate Block/MFA)"
+    }
+  ],
+  "test_population": {
+    "total": 12000,
+    "legitimate": 11856,
+    "fraudulent": 144
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "candidate_models": {
+    "Logistic Regression (Baseline)": {
+      "precision": 0.5685,
+      "recall": 0.9514,
+      "f1_score": 0.7117,
+      "roc_auc": 0.9981,
+      "pr_auc": 0.9507,
+      "confusion_matrix": [
+        [
+          11752,
+          104
+        ],
+        [
+          7,
+          137
+        ]
+      ]
+    },
+    "Random Forest": {
+      "precision": 0.9467,
+      "recall": 0.9861,
+      "f1_score": 0.966,
+      "roc_auc": 1.0,
+      "pr_auc": 0.9971,
+      "confusion_matrix": [
+        [
+          11848,
+          8
+        ],
+        [
+          2,
+          142
+        ]
+      ]
+    },
+    "XGBoost": {
+      "precision": 0.9793,
+      "recall": 0.9861,
+      "f1_score": 0.9827,
+      "roc_auc": 1.0,
+      "pr_auc": 0.999,
+      "confusion_matrix": [
+        [
+          11853,
+          3
+        ],
+        [
+          2,
+          142
+        ]
+      ]
+    }
+  },
+  "champion": {
+    "model_name": "XGBoost",
+    "metrics": {
+      "precision": 0.9793,
+      "recall": 0.9861,
+      "f1_score": 0.9827,
+      "roc_auc": 1.0,
+      "pr_auc": 0.999,
+      "confusion_matrix": [
+        [
+          11853,
+          3
+        ],
+        [
+          2,
+          142
+        ]
+      ]
+    }
+  },
+  "features": [
+    "amount",
+    "distance",
+    "time_delta",
+    "merchant_risk",
+    "device_trust",
+    "velocity_1h",
+    "velocity_24h",
+    "hour_of_day",
+    "is_weekend"
+  ],
+  "target": "is_fraud"
+}
