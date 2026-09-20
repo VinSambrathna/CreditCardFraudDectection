@@ -108,15 +108,24 @@ sentinelpay/
 │   ├── data/                       # Raw & Processed Datasets
 │   ├── models/                     # Trained candidate models & evaluation metrics
 │   ├── notebooks/                  # 6 Academic Jupyter Notebooks (01_eda to 06_shap_analysis)
-│   └── scripts/                    # Training, Evaluation, and Packaging scripts
+│   └── scripts/                    # Training, Evaluation, Retraining & Packaging scripts
+│       ├── train.py
+│       ├── evaluate.py
+│       ├── export_model.py
+│       └── retrain_feedback_loop.py # Human-in-the-loop incremental retraining
 │
 ├── database/
 │   └── init.sql                    # Production MySQL Schema & Seed Data
 │
-├── tests/
-│   ├── test_model.py               # Unit tests for Model & SHAP latency
-│   └── test_api.py                 # Integration tests for FastAPI endpoints
+├── docker/
+│   └── README.md                   # Docker Architecture & Deployment Guide
 │
+├── tests/
+│   ├── test_model.py               # Unit tests for Model & TreeSHAP latency
+│   ├── test_api.py                 # Integration tests for FastAPI endpoints
+│   └── test_verification.py        # Step-Up 3DS2 MFA and state machine tests
+│
+├── docker-compose.yml              # Multi-container orchestration (MySQL, Backend, Frontend)
 ├── test_demo_flow.py               # Interactive End-to-End Terminal Demo Runner
 ├── pytest.ini                      # Pytest Configuration
 ├── .env.example                    # Environment Variable Template
@@ -127,17 +136,19 @@ sentinelpay/
 
 ## Quick Start Guide
 
-### Prerequisites
+### Option A: Standard Local Development
+
+#### Prerequisites
 - Python 3.10+
 - Node.js 18+ & npm
 
-### 1. Backend Setup
+#### 1. Backend Setup
 
 ```bash
 # Install Python dependencies
 pip install -r backend/requirements.txt
 
-# Run automated tests (10/10 checks)
+# Run comprehensive automated test suite (19/19 checks)
 python -m pytest tests/ -v
 
 # Start FastAPI backend server
@@ -145,7 +156,7 @@ python -m uvicorn backend.main:app --reload --port 8000
 ```
 Interactive API docs will be available at: `http://localhost:8000/docs`.
 
-### 2. Frontend Setup
+#### 2. Frontend Setup
 
 ```bash
 cd frontend
@@ -158,12 +169,35 @@ npm run dev
 ```
 Open your browser at: `http://localhost:5173`.
 
-### 3. Interactive CLI Demo
+#### 3. Continuous Retraining Loop (Human-in-the-Loop)
+
+To ingest cardholder-verified feedback events from the database and trigger incremental champion retraining:
+```bash
+python ml/scripts/retrain_feedback_loop.py
+```
+
+#### 4. Interactive CLI Demo
 
 To run a complete simulation of all 3 presentation scenarios directly in your terminal:
 ```bash
 python test_demo_flow.py
 ```
+
+---
+
+### Option B: Containerized Deployment (Docker Compose)
+
+Launch the full stack with isolated MySQL, FastAPI, and Nginx containers:
+
+```bash
+# Build and spin up all three services in background
+docker compose up --build -d
+
+# Verify container health
+docker compose ps
+```
+- Web Application: `http://localhost:5173`
+- Backend API Docs: `http://localhost:8000/docs`
 
 ---
 

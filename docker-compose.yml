@@ -1,0 +1,73 @@
+services:
+  # 1. MySQL Relational Database
+  sentinelpay-mysql:
+    image: mysql:8.0
+    container_name: sentinelpay-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: sentinelpay
+      MYSQL_USER: sentinel_user
+      MYSQL_PASSWORD: sentinel_secure_pass
+      MYSQL_ROOT_PASSWORD: sentinel_root_secure_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - sentinelpay_mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "sentinel_user", "-psentinel_secure_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - sentinelpay-network
+
+  # 2. FastAPI Machine Learning & TreeSHAP Backend
+  sentinelpay-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: sentinelpay-backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      DATABASE_URL: mysql+pymysql://sentinel_user:sentinel_secure_pass@sentinelpay-mysql:3306/sentinelpay
+      SECRET_KEY: sentinelpay_jwt_secret_capstone_2026
+      RISK_THRESHOLD_LOW: "0.35"
+      RISK_THRESHOLD_HIGH: "0.70"
+    ports:
+      - "8000:8000"
+    depends_on:
+      sentinelpay-mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - sentinelpay-network
+
+  # 3. React Institutional Banking Frontend
+  sentinelpay-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sentinelpay-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - sentinelpay-backend
+    networks:
+      - sentinelpay-network
+
+networks:
+  sentinelpay-network:
+    driver: bridge
+
+volumes:
+  sentinelpay_mysql_data:
+    driver: local

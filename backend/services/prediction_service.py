@@ -45,6 +45,11 @@ class PredictionService:
             cls._instance = cls()
         return cls._instance
 
+    @classmethod
+    def reload(cls):
+        cls._instance = cls()
+        return cls._instance
+
     def predict(self, req: PredictRequest) -> Tuple[float, int, str, str, bool, pd.DataFrame, Any]:
         """
         Executes real-time inference and returns:
@@ -82,6 +87,13 @@ class PredictionService:
             prediction = 1
         else:
             risk_level = "HIGH"
+            status = "SOFT_BLOCKED"
+            requires_verification = True
+            prediction = 1
+
+        # Operational Circuit Breaker: Outlier amount (> $5,000) overrides to at least REVIEW
+        if req.amount >= 5000.0 and risk_level == "LOW":
+            risk_level = "REVIEW"
             status = "SOFT_BLOCKED"
             requires_verification = True
             prediction = 1

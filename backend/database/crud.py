@@ -260,3 +260,7 @@ def seed_demo_data_if_empty(db: Session):
         )
         db.add(ve)
         db.commit()
+
+def get_active_model_version(db: Session) -> Optional[ModelVersion]:
+    return db.query(ModelVersion).filter(ModelVersion.is_active == True).order_by(ModelVersion.trained_at.desc()).first()
+

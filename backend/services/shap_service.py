@@ -30,6 +30,11 @@ class ShapService:
             cls._instance = cls()
         return cls._instance
 
+    @classmethod
+    def reload(cls):
+        cls._instance = cls()
+        return cls._instance
+
     def explain_transaction(self, raw_df: pd.DataFrame, scaled_matrix: np.ndarray) -> List[Dict[str, Any]]:
         """
         Generates structured local SHAP explanations for a single transaction.
