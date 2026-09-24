@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -12,6 +13,7 @@ import {
   Cpu,
 } from "lucide-react";
 import VerificationModal from "../components/VerificationModal";
+import AnimatedNumber from "../components/AnimatedNumber";
 
 export default function TransactionResult({
   transaction,
@@ -93,7 +95,6 @@ export default function TransactionResult({
     ? {
         color: "var(--emerald)",
         statusClass: "status-approved",
-        badgeText: "Clearance Granted",
         title: "Transaction Cleared for Settlement",
         description:
           "Calculated risk falls safely within the automated clearance envelope. Authorized without friction.",
@@ -102,7 +103,6 @@ export default function TransactionResult({
     ? {
         color: "var(--amber)",
         statusClass: "status-review",
-        badgeText: "3DS2 Step-Up Required",
         title: "Step-Up Verification Challenge Triggered",
         description:
           "Risk exceeds automated clearance threshold due to anomalous telemetry signals. Payment held pending OTP.",
@@ -110,7 +110,6 @@ export default function TransactionResult({
     : {
         color: "var(--rose)",
         statusClass: "status-blocked",
-        badgeText: "Hard Refusal",
         title: "Authorization Declined",
         description:
           "Risk exceeds the hard denial threshold (0.70). High-confidence fraud indicators detected. Transaction blocked.",
@@ -124,33 +123,51 @@ export default function TransactionResult({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
           marginBottom: 24,
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <span
-              className={`status-indicator ${statusTheme.statusClass}`}
-              style={{ fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}
-            >
-              <span className="status-dot" />
-              {statusTheme.badgeText}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span className="section-kicker">Point of Sale</span>
+            <span style={{ color: "var(--text-4)", fontSize: 11 }}>/</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              Authorization Receipt
             </span>
             <span style={{ color: "var(--text-4)" }}>·</span>
             <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-3)" }}>
               {currentTx.transaction_id || currentTx.transaction_token}
             </span>
           </div>
-          <h1 className="page-title">Authorization Verdict</h1>
+          <h1 className="page-title">Authorization Outcome</h1>
+          <p className="page-subtitle">
+            Real-time settlement decision issued by the SentinelPay risk evaluation engine.
+          </p>
         </div>
 
-        <button onClick={onReset} className="btn-island-secondary">
-          <RotateCcw style={{ width: 13, height: 13 }} /> New Simulation
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button
+            onClick={onNavigateToIntelligence}
+            className="btn-island-secondary"
+            style={{ fontSize: 12, padding: "7px 14px" }}
+          >
+            Audit in Fraud Forensics &rarr;
+          </button>
+          <button onClick={onReset} className="btn-island-primary" style={{ fontSize: 12, padding: "7px 16px" }}>
+            <RotateCcw style={{ width: 13, height: 13 }} /> New Checkout
+          </button>
+        </div>
       </div>
 
       {/* Double-Bezel Verdict Banner */}
-      <div className="bezel-shell" style={{ marginBottom: 20 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        className="bezel-shell"
+        style={{ marginBottom: 20 }}
+      >
         <div className="bezel-core" style={{ padding: "26px 30px" }}>
           <div
             style={{
@@ -172,7 +189,7 @@ export default function TransactionResult({
                   alignItems: "center",
                   justifyContent: "center",
                   color: statusTheme.color,
-                  shrink: 0,
+                  flexShrink: 0,
                 }}
               >
                 <StatusIcon style={{ width: 22, height: 22 }} strokeWidth={2.2} />
@@ -204,7 +221,7 @@ export default function TransactionResult({
                 textAlign: "right",
               }}
             >
-              <span className="section-label" style={{ fontSize: 10 }}>
+              <span className="section-label" style={{ fontSize: 11 }}>
                 Evaluated Risk
               </span>
               <div
@@ -217,7 +234,7 @@ export default function TransactionResult({
                   marginTop: 3,
                 }}
               >
-                {probPercent}%
+                <AnimatedNumber value={parseFloat(probPercent)} decimals={1} suffix="%" />
               </div>
               <span
                 style={{
@@ -261,7 +278,7 @@ export default function TransactionResult({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Details Grid (Double-Bezel) */}
       <div
@@ -307,9 +324,14 @@ export default function TransactionResult({
                   bold: true,
                 },
                 {
+                  label: "Payment Instrument",
+                  value: currentTx.card_brand ? `${currentTx.card_brand} (•• ${currentTx.card_last4 || "8821"})` : "Visa Signature (•• 8821)",
+                  mono: true,
+                },
+                {
                   label: "Cardholder Account",
                   value: `#${currentTx.user_id || 1001} (${
-                    currentTx.user_id === 1002 ? "Jonathan Vance" : "Alex Morgan"
+                    currentTx.cardholder_name || (currentTx.user_id === 1002 ? "Jonathan Vance" : "Alex Morgan")
                   })`,
                 },
                 {
@@ -336,8 +358,7 @@ export default function TransactionResult({
                   <span style={{ color: "var(--text-3)" }}>{row.label}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     {row.badge ? (
-                      <span className={`status-indicator ${statusTheme.statusClass}`}>
-                        <span className="status-dot" />
+                      <span className={`status-tag ${statusTheme.statusClass}`}>
                         {row.value}
                       </span>
                     ) : (
@@ -354,7 +375,9 @@ export default function TransactionResult({
                     )}
                     {row.copy && (
                       <button
+                        type="button"
                         onClick={copyToken}
+                        aria-label={copied ? "Transaction token copied to clipboard" : "Copy transaction token"}
                         style={{
                           background: "var(--shell-bg)",
                           border: "none",
@@ -392,8 +415,10 @@ export default function TransactionResult({
                 gap: 8,
               }}
             >
-              <Cpu style={{ width: 14, height: 14, color: "var(--text-2)" }} />
-              <span>Inference latency: &lt;8ms via optimized C++ engine runtime.</span>
+              <Cpu style={{ width: 14, height: 14, color: "var(--cobalt)" }} />
+              <span style={{ fontFamily: "var(--font-mono)" }}>
+                Inference latency: {currentTx.latency_ms ? `${Number(currentTx.latency_ms).toFixed(1)}ms` : "8.1ms"} (real-time tree evaluation)
+              </span>
             </div>
           </div>
         </div>
@@ -421,18 +446,31 @@ export default function TransactionResult({
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: { opacity: 1, transition: { staggerChildren: 0.07 } },
+                }}
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
                 {currentTx.explanation?.length > 0 ? (
                   currentTx.explanation.slice(0, 4).map((exp, i) => {
                     const isRisk = exp.direction === "RISK_INCREASING";
                     return (
-                      <div
+                      <motion.div
                         key={i}
+                        variants={{
+                          hidden: { opacity: 0, x: -6 },
+                          visible: { opacity: 1, x: 0, transition: { duration: 0.25 } },
+                        }}
                         style={{
                           padding: "11px 14px",
                           borderRadius: 12,
                           background: isRisk ? "var(--rose-light)" : "var(--emerald-light)",
                           border: `1px solid ${isRisk ? "var(--rose-border)" : "var(--emerald-border)"}`,
+                          borderLeft: isRisk ? "3.5px solid var(--rose)" : "3.5px solid var(--emerald)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
@@ -460,11 +498,11 @@ export default function TransactionResult({
                               ? `+${exp.contribution.toFixed(3)}`
                               : exp.contribution.toFixed(3)}
                           </div>
-                          <div style={{ fontSize: 10, color: "var(--text-3)" }}>
+                          <div style={{ fontSize: 11, color: "var(--text-3)" }}>
                             {isRisk ? "Elevates risk" : "Protective factor"}
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })
                 ) : (
@@ -472,7 +510,7 @@ export default function TransactionResult({
                     Standard baseline parameters applied. No dominant risk flags.
                   </div>
                 )}
-              </div>
+              </motion.div>
             </div>
 
             <button

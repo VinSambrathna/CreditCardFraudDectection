@@ -1,0 +1,81 @@
+{
+  "features": [
+    "amount",
+    "distance",
+    "time_delta",
+    "merchant_risk",
+    "device_trust",
+    "velocity_1h",
+    "velocity_24h",
+    "hour_of_day",
+    "is_weekend"
+  ],
+  "feature_labels": {
+    "amount": "Transaction Amount ($)",
+    "distance": "Distance from Home (km)",
+    "time_delta": "Time Since Last Txn (hrs)",
+    "merchant_risk": "Merchant Category Risk",
+    "device_trust": "Device Trust Score",
+    "velocity_1h": "1-Hour Txn Velocity",
+    "velocity_24h": "24-Hour Txn Velocity",
+    "hour_of_day": "Hour of Day (0-23)",
+    "is_weekend": "Weekend Transaction"
+  },
+  "default_values": {
+    "velocity_1h": 1,
+    "velocity_24h": 2,
+    "hour_of_day": 14,
+    "is_weekend": 0
+  },
+  "risk_thresholds": {
+    "low": 0.35,
+    "high": 0.7
+  },
+  "global_importance": [
+    {
+      "feature": "distance",
+      "label": "Distance from Home (km)",
+      "importance": 2.9372
+    },
+    {
+      "feature": "device_trust",
+      "label": "Device Trust Score",
+      "importance": 2.4318
+    },
+    {
+      "feature": "time_delta",
+      "label": "Time Since Last Txn (hrs)",
+      "importance": 1.5009
+    },
+    {
+      "feature": "amount",
+      "label": "Transaction Amount ($)",
+      "importance": 0.5851
+    },
+    {
+      "feature": "merchant_risk",
+      "label": "Merchant Category Risk",
+      "importance": 0.4679
+    },
+    {
+      "feature": "velocity_24h",
+      "label": "24-Hour Txn Velocity",
+      "importance": 0.4522
+    },
+    {
+      "feature": "hour_of_day",
+      "label": "Hour of Day (0-23)",
+      "importance": 0.3124
+    },
+    {
+      "feature": "is_weekend",
+      "label": "Weekend Transaction",
+      "importance": 0.1936
+    },
+    {
+      "feature": "velocity_1h",
+      "label": "1-Hour Txn Velocity",
+      "importance": 0.1299
+    }
+  ]
+}

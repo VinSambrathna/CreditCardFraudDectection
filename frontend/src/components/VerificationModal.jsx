@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldAlert,
   CheckCircle2,
@@ -6,7 +7,6 @@ import {
   RotateCw,
   X,
   Clock,
-  ArrowRight,
 } from "lucide-react";
 import { verifyTransaction } from "../services/api";
 
@@ -20,16 +20,55 @@ export default function VerificationModal({
   const [timeLeft, setTimeLeft] = useState(300);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const authorizeButtonRef = useRef(null);
 
+  // Focus management & keyboard trap
   useEffect(() => {
     if (!isOpen) return;
     setTimeLeft(300);
     setError(null);
+
+    // Initial focus on authorize button for fast action
+    const timerFocus = setTimeout(() => {
+      authorizeButtonRef.current?.focus();
+    }, 100);
+
     const timer = setInterval(() => {
       setTimeLeft((p) => (p > 0 ? p - 1 : 0));
     }, 1000);
-    return () => clearInterval(timer);
-  }, [isOpen]);
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab" && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      clearTimeout(timerFocus);
+      clearInterval(timer);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen || !transaction) return null;
 
@@ -56,32 +95,46 @@ export default function VerificationModal({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        background: "rgba(10, 15, 29, 0.45)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="bezel-shell"
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
         style={{
-          width: "100%",
-          maxWidth: 440,
-          background: "#FFFFFF",
-          boxShadow: "0 20px 50px -10px rgba(10, 15, 29, 0.25)",
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 16,
+          background: "rgba(10, 15, 29, 0.45)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
+        onClick={onClose}
       >
-        <div className="bezel-core" style={{ padding: "24px 26px" }}>
+        <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          aria-describedby="modal-desc"
+          initial={{ opacity: 0, scale: 0.95, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 4 }}
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          onClick={(e) => e.stopPropagation()}
+          className="bezel-shell"
+          style={{
+            width: "100%",
+            maxWidth: 440,
+            background: "#FFFFFF",
+            boxShadow: "0 24px 60px -12px rgba(10, 15, 29, 0.3)",
+          }}
+        >
+          <div className="bezel-core" style={{ padding: "24px 26px" }}>
           {/* Header */}
           <div
             style={{
@@ -109,7 +162,7 @@ export default function VerificationModal({
                 <ShieldAlert style={{ width: 18, height: 18 }} />
               </div>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>
+                <h3 id="modal-title" style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>
                   3DS2 Step-Up Challenge
                 </h3>
                 <span style={{ fontSize: 11, color: "var(--text-3)" }}>
@@ -119,7 +172,10 @@ export default function VerificationModal({
             </div>
 
             <button
+              ref={closeButtonRef}
               onClick={onClose}
+              type="button"
+              aria-label="Close verification modal"
               style={{
                 background: "var(--shell-bg)",
                 border: "none",
@@ -137,6 +193,7 @@ export default function VerificationModal({
 
           {/* Context box */}
           <div
+            id="modal-desc"
             style={{
               padding: "14px 16px",
               borderRadius: 14,
@@ -207,6 +264,8 @@ export default function VerificationModal({
 
           {error && (
             <div
+              role="alert"
+              className="error-message-enter"
               style={{
                 padding: "8px 12px",
                 borderRadius: 10,
@@ -225,8 +284,11 @@ export default function VerificationModal({
           {/* Action Buttons */}
           <div style={{ display: "flex", gap: 10 }}>
             <button
+              ref={authorizeButtonRef}
+              type="button"
               onClick={() => handleAction("APPROVE")}
               disabled={isProcessing}
+              aria-busy={isProcessing}
               className="btn-island"
               style={{ flex: 1 }}
             >
@@ -241,6 +303,7 @@ export default function VerificationModal({
             </button>
 
             <button
+              type="button"
               onClick={() => handleAction("DENY")}
               disabled={isProcessing}
               className="btn-island-secondary"
@@ -251,7 +314,8 @@ export default function VerificationModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+  </AnimatePresence>
   );
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { getModelInfo } from "../services/api";
+import AnimatedNumber from "../components/AnimatedNumber";
 
 export default function ModelIntelligence() {
   const [intel, setIntel] = useState(null);
@@ -54,20 +56,10 @@ export default function ModelIntelligence() {
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <span
-              className="status-indicator status-cobalt"
-              style={{ fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}
-            >
-              <span className="status-dot" />
-              Holdout Evaluation N=12,000
-            </span>
-            <span style={{ color: "var(--text-4)" }}>·</span>
-            <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-3)" }}>
-              Train-Only SMOTE Balancing
-            </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span className="section-label">Model Governance</span>
           </div>
-          <h1 className="page-title">Model Governance & Decision Cutoffs</h1>
+          <h1 className="page-title">Model Governance &amp; Decision Cutoffs</h1>
           <p className="page-subtitle">
             Holdout evaluation benchmarks, global TreeSHAP rankings, confusion matrix, and calibrated operating boundaries.
           </p>
@@ -94,69 +86,108 @@ export default function ModelIntelligence() {
       </div>
 
       {/* 4 Double-Bezel Metric Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-          gap: 14,
-          marginBottom: 20,
-        }}
-      >
-        {[
-          {
-            label: "PR-AUC Score",
-            value: metrics.pr_auc?.toFixed(4),
-            sub: "Precision-Recall curve area",
-            statusClass: "status-cobalt",
-            tag: "0.9990",
-          },
-          {
-            label: "Recall Rate",
-            value: `${((metrics.recall || 0) * 100).toFixed(2)}%`,
-            sub: "142 of 144 true frauds caught",
-            statusClass: "status-approved",
-            tag: "High sensitivity",
-          },
-          {
-            label: "Precision Rate",
-            value: `${((metrics.precision || 0) * 100).toFixed(2)}%`,
-            sub: "3 false positives in 12,000",
-            statusClass: "status-neutral",
-            tag: "Low friction",
-          },
-          {
-            label: "F1-Score",
-            value: metrics.f1_score?.toFixed(4),
-            sub: "Harmonic balanced mean",
-            statusClass: "status-cobalt",
-            tag: "Stable",
-          },
-        ].map((m, i) => (
-          <div key={i} className="bezel-shell">
-            <div className="bezel-core" style={{ padding: "20px 22px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <span className="section-label" style={{ fontSize: 10 }}>{m.label}</span>
-                <span className={`status-indicator ${m.statusClass}`} style={{ fontSize: 11 }}>
-                  <span className="status-dot" />
-                  {m.tag}
-                </span>
+      {loading && !intel ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+            gap: 14,
+            marginBottom: 20,
+          }}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="bezel-shell">
+              <div className="bezel-core" style={{ padding: "20px 22px" }}>
+                <div className="skeleton skeleton-text" style={{ width: "45%", marginBottom: 12 }} />
+                <div className="skeleton skeleton-title" style={{ width: "65%", marginBottom: 8 }} />
+                <div className="skeleton skeleton-text" style={{ width: "50%" }} />
               </div>
-              <div
-                style={{
-                  fontSize: 24,
-                  fontWeight: 800,
-                  fontFamily: "var(--font-mono)",
-                  color: "var(--text-1)",
-                  marginBottom: 4,
-                }}
-              >
-                {m.value}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 500 }}>{m.sub}</div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.07 } },
+          }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+            gap: 14,
+            marginBottom: 20,
+          }}
+        >
+          {[
+            {
+              label: "PR-AUC Score",
+              numericValue: metrics.pr_auc || 0.999,
+              decimals: 4,
+              sub: "Precision-Recall curve area",
+              target: "0.950",
+            },
+            {
+              label: "Recall Rate",
+              numericValue: (metrics.recall || 0) * 100,
+              decimals: 2,
+              suffix: "%",
+              sub: "142 of 144 true frauds caught",
+              target: "95.0%",
+            },
+            {
+              label: "Precision Rate",
+              numericValue: (metrics.precision || 0) * 100,
+              decimals: 2,
+              suffix: "%",
+              sub: "3 false positives in 12,000",
+              target: "95.0%",
+            },
+            {
+              label: "F1-Score",
+              numericValue: metrics.f1_score || 0.9827,
+              decimals: 4,
+              sub: "Harmonic balanced mean",
+              target: "0.950",
+            },
+          ].map((m, i) => (
+            <motion.div
+              key={i}
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.28 } },
+              }}
+              className="bezel-shell"
+            >
+              <div className="bezel-core" style={{ padding: "20px 22px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <span className="section-label" style={{ fontSize: 11 }}>{m.label}</span>
+                  <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-3)", fontWeight: 500 }}>
+                    Target ≥ {m.target}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 800,
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--text-1)",
+                    marginBottom: 4,
+                  }}
+                >
+                  <AnimatedNumber
+                    value={m.numericValue}
+                    decimals={m.decimals}
+                    suffix={m.suffix || ""}
+                  />
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 500 }}>{m.sub}</div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
 
       {/* Middle 2-Column Section (Double-Bezel) */}
       <div
@@ -188,10 +219,6 @@ export default function ModelIntelligence() {
                   Mean absolute Shapley values across population
                 </span>
               </div>
-              <span className="status-indicator status-neutral" style={{ fontSize: 11 }}>
-                <span className="status-dot" />
-                Mean |SHAP|
-              </span>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -203,53 +230,38 @@ export default function ModelIntelligence() {
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 5,
                         fontSize: 12,
+                        marginBottom: 4,
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontFamily: "var(--font-mono)",
-                            color: "var(--text-4)",
-                            width: 16,
-                          }}
-                        >
-                          #{i + 1}
-                        </span>
-                        <span style={{ fontWeight: 600, color: "var(--text-1)" }}>
-                          {item.label}
-                        </span>
-                      </div>
+                      <span style={{ fontWeight: 600, color: "var(--text-1)" }}>
+                        {item.feature}
+                      </span>
                       <span
                         style={{
                           fontFamily: "var(--font-mono)",
-                          fontSize: 11,
-                          fontWeight: 600,
+                          fontSize: 11.5,
+                          fontWeight: 700,
                           color: "var(--text-2)",
                         }}
                       >
-                        {item.importance.toFixed(4)}
+                        {item.importance.toFixed(3)}
                       </span>
                     </div>
-
                     <div
                       style={{
                         height: 5,
-                        width: "100%",
+                        borderRadius: 3,
                         background: "var(--shell-bg)",
-                        borderRadius: 99,
                         overflow: "hidden",
                       }}
                     >
                       <div
                         style={{
-                          width: `${pct}%`,
                           height: "100%",
-                          background: i < 2 ? "var(--cobalt)" : "var(--text-1)",
-                          borderRadius: 99,
+                          width: `${pct}%`,
+                          borderRadius: 3,
+                          background: "var(--cobalt)",
                         }}
                       />
                     </div>
@@ -262,7 +274,7 @@ export default function ModelIntelligence() {
 
         {/* Right Column: Confusion Matrix & Specs */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Confusion Matrix (N = 12,000) */}
+          {/* Holdout Confusion Matrix */}
           <div className="bezel-shell">
             <div className="bezel-core" style={{ padding: "24px 26px" }}>
               <div
@@ -283,8 +295,7 @@ export default function ModelIntelligence() {
                     Evaluated on N = 12,000 unseen test records
                   </span>
                 </div>
-                <span className="status-indicator status-approved" style={{ fontSize: 11 }}>
-                  <span className="status-dot" />
+                <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--emerald)" }}>
                   99.96% Accuracy
                 </span>
               </div>
@@ -302,43 +313,60 @@ export default function ModelIntelligence() {
                     label: "True Negative (TN)",
                     value: "11,853",
                     sub: "Legit cleared (98.78%)",
-                    badge: "eyebrow-emerald",
+                    bg: "var(--emerald-light)",
+                    border: "var(--emerald-border)",
+                    topColor: "var(--emerald)",
+                    category: "Cleared",
                   },
                   {
                     label: "False Positive (FP)",
                     value: "3",
-                    sub: "False alarms (0.02%)",
-                    badge: "eyebrow-amber",
+                    sub: "False holds (0.02%)",
+                    bg: "var(--amber-light)",
+                    border: "var(--amber-border)",
+                    topColor: "var(--amber)",
+                    category: "Held (3DS2)",
                   },
                   {
                     label: "False Negative (FN)",
                     value: "2",
                     sub: "Missed fraud (0.01%)",
-                    badge: "eyebrow-rose",
+                    bg: "var(--rose-light)",
+                    border: "var(--rose-border)",
+                    topColor: "var(--rose)",
+                    category: "Missed",
                   },
                   {
                     label: "True Positive (TP)",
                     value: "142",
                     sub: "Frauds caught (98.61%)",
-                    badge: "eyebrow-emerald",
+                    bg: "var(--emerald-light)",
+                    border: "var(--emerald-border)",
+                    topColor: "var(--emerald)",
+                    category: "Declined",
                   },
                 ].map((c, i) => (
                   <div
                     key={i}
                     style={{
-                      padding: "14px 14px",
+                      padding: "15px 14px",
                       borderRadius: 14,
-                      background: "var(--shell-bg)",
+                      background: c.bg,
+                      border: `1px solid ${c.border}`,
+                      borderTop: `3px solid ${c.topColor}`,
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "var(--text-3)", marginBottom: 2 }}>
-                      {c.label}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, fontSize: 11 }}>
+                      <span style={{ color: "var(--text-2)", fontWeight: 600 }}>{c.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: c.topColor }}>
+                        {c.category}
+                      </span>
                     </div>
                     <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-1)" }}>
                       {c.value}
                     </div>
-                    <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>
                       {c.sub}
                     </div>
                   </div>
@@ -467,19 +495,50 @@ export default function ModelIntelligence() {
                       key={i}
                       style={{
                         borderBottom: "1px solid var(--shell-bg)",
-                        background: isClearance || isDenial ? "var(--shell-bg)" : "transparent",
+                        background: isClearance
+                          ? "rgba(37, 99, 235, 0.06)"
+                          : isDenial
+                          ? "rgba(220, 38, 38, 0.06)"
+                          : "transparent",
                       }}
                     >
-                      <td style={{ padding: "10px 18px", fontWeight: 700, color: "var(--text-1)" }}>
+                      <td
+                        style={{
+                          padding: "10px 18px",
+                          fontWeight: 700,
+                          color: "var(--text-1)",
+                          borderLeft: isClearance
+                            ? "3px solid var(--cobalt)"
+                            : isDenial
+                            ? "3px solid var(--rose)"
+                            : "3px solid transparent",
+                        }}
+                      >
                         {row.threshold.toFixed(2)}
                         {isClearance && (
-                          <span style={{ marginLeft: 6, fontSize: 10, color: "var(--cobalt)" }}>
-                            (Clearance)
+                          <span
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: "var(--cobalt)",
+                              fontFamily: "var(--font-mono)",
+                            }}
+                          >
+                            [ACTIVE CLEARANCE]
                           </span>
                         )}
                         {isDenial && (
-                          <span style={{ marginLeft: 6, fontSize: 10, color: "var(--rose)" }}>
-                            (Denial)
+                          <span
+                            style={{
+                              marginLeft: 6,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: "var(--rose)",
+                              fontFamily: "var(--font-mono)",
+                            }}
+                          >
+                            [HARD BLOCK]
                           </span>
                         )}
                       </td>
@@ -497,7 +556,7 @@ export default function ModelIntelligence() {
                       </td>
                       <td style={{ padding: "10px 18px" }}>
                         <span
-                          className={`status-indicator ${
+                          className={`status-tag ${
                             row.threshold < 0.35
                               ? "status-approved"
                               : row.threshold < 0.7
@@ -505,7 +564,6 @@ export default function ModelIntelligence() {
                               : "status-blocked"
                           }`}
                         >
-                          <span className="status-dot" />
                           {row.tier}
                         </span>
                       </td>

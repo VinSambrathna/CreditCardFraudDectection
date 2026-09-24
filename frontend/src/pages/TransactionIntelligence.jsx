@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  Layers,
-  ArrowRight,
-  FileText,
-  Cpu,
-} from "lucide-react";
+import { motion } from "framer-motion";
 import { getTransactions } from "../services/api";
+import AnimatedNumber from "../components/AnimatedNumber";
 
 export default function TransactionIntelligence({ selectedTransaction }) {
   const [transactions, setTransactions] = useState([]);
@@ -45,35 +41,18 @@ export default function TransactionIntelligence({ selectedTransaction }) {
   return (
     <div className="page-container">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <span
-            className="status-indicator status-cobalt"
-            style={{ fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}
-          >
-            <span className="status-dot" />
-            Interpretability Engine
-          </span>
-          <span style={{ color: "var(--text-4)" }}>·</span>
-          <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-3)" }}>
-            Exact TreeSHAP Attribution
-          </span>
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <span className="section-label">SHAP Forensics</span>
         </div>
-        <h1 className="page-title">Transaction Explainability</h1>
+        <h1 className="page-title">Transaction Forensics &amp; Attribution</h1>
         <p className="page-subtitle">
-          Exact Shapley values quantifying the marginal change in log-odds produced by each telemetry signal.
+          Exact Shapley values quantifying the marginal contribution of each behavioral signal to transaction log-odds.
         </p>
       </div>
 
       {/* 2-Column Double-Bezel Layout */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "330px 1fr",
-          gap: 16,
-          alignItems: "start",
-        }}
-      >
+      <div className="intelligence-grid">
         {/* Left Column: Transaction Feed */}
         <div className="bezel-shell">
           <div className="bezel-core" style={{ padding: "18px 20px" }}>
@@ -87,7 +66,7 @@ export default function TransactionIntelligence({ selectedTransaction }) {
                 marginBottom: 12,
               }}
             >
-              <span className="section-label" style={{ fontSize: 10 }}>
+              <span className="section-label" style={{ fontSize: 11 }}>
                 Audit Queue
               </span>
               <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-3)" }}>
@@ -104,84 +83,106 @@ export default function TransactionIntelligence({ selectedTransaction }) {
                 overflowY: "auto",
               }}
             >
-              {transactions.map((tx) => {
-                const isSelected =
-                  (activeTx?.transaction_token || activeTx?.transaction_id) ===
-                  (tx.transaction_token || tx.transaction_id);
-                const ok =
-                  tx.status === "APPROVED" || tx.status === "VERIFIED";
-                const isSoft = tx.status === "SOFT_BLOCKED";
-                const prob = ((tx.fraud_probability || 0) * 100).toFixed(1);
-
-                return (
-                  <div
-                    key={tx.id || tx.transaction_token}
-                    onClick={() => setActiveTx(tx)}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: 12,
-                      cursor: "pointer",
-                      border: isSelected ? "1px solid var(--cobalt)" : "1px solid transparent",
-                      background: isSelected ? "var(--cobalt-light)" : "transparent",
-                      transition: "all 140ms var(--ease-spring)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 4,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontFamily: "var(--font-mono)",
-                          fontWeight: 700,
-                          color: isSelected ? "var(--cobalt)" : "var(--text-1)",
-                        }}
-                      >
-                        {tx.transaction_token}
-                      </span>
-                      <span
-                        className={`status-indicator ${
-                          ok ? "status-approved" : isSoft ? "status-review" : "status-blocked"
-                        }`}
-                        style={{ fontSize: 11 }}
-                      >
-                        <span className="status-dot" />
-                        {tx.status}
-                      </span>
+              {loading && transactions.length === 0 ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} style={{ padding: "10px 12px", borderRadius: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                      <div className="skeleton skeleton-text" style={{ width: 110 }} />
+                      <div className="skeleton skeleton-text" style={{ width: 45 }} />
                     </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        fontSize: 11,
-                        color: "var(--text-3)",
-                        fontFamily: "var(--font-mono)",
-                      }}
-                    >
-                      <span>${(tx.amount || 0).toFixed(2)}</span>
-                      <span
-                        style={{
-                          fontWeight: 700,
-                          color: ok
-                            ? "var(--emerald)"
-                            : isSoft
-                            ? "var(--amber)"
-                            : "var(--rose)",
-                        }}
-                      >
-                        {prob}%
-                      </span>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <div className="skeleton skeleton-text" style={{ width: 50 }} />
+                      <div className="skeleton skeleton-text" style={{ width: 35 }} />
                     </div>
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                transactions.map((tx) => {
+                  const isSelected =
+                    (activeTx?.transaction_token || activeTx?.transaction_id) ===
+                    (tx.transaction_token || tx.transaction_id);
+                  const ok =
+                    tx.status === "APPROVED" || tx.status === "VERIFIED";
+                  const isSoft = tx.status === "SOFT_BLOCKED";
+                  const prob = ((tx.fraud_probability || 0) * 100).toFixed(1);
+
+                  return (
+                    <div
+                      key={tx.id || tx.transaction_token}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Audit transaction ${tx.transaction_token}, amount $${(tx.amount || 0).toFixed(2)}, status ${tx.status}`}
+                      onClick={() => setActiveTx(tx)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setActiveTx(tx);
+                        }
+                      }}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        cursor: "pointer",
+                        border: isSelected ? "1px solid var(--cobalt)" : "1px solid transparent",
+                        background: isSelected ? "var(--cobalt-light)" : "transparent",
+                        transition: "background 140ms ease, border-color 140ms ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: 4,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontFamily: "var(--font-mono)",
+                            fontWeight: 700,
+                            color: isSelected ? "var(--cobalt)" : "var(--text-1)",
+                          }}
+                        >
+                          {tx.transaction_token}
+                        </span>
+                        <span
+                          className={`status-tag ${
+                            ok ? "status-approved" : isSoft ? "status-review" : "status-blocked"
+                          }`}
+                        >
+                          {tx.status}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          fontSize: 11,
+                          color: "var(--text-3)",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                      >
+                        <span>${(tx.amount || 0).toFixed(2)}</span>
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            color: ok
+                              ? "var(--emerald)"
+                              : isSoft
+                              ? "var(--amber)"
+                              : "var(--rose)",
+                          }}
+                        >
+                          {prob}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -216,8 +217,8 @@ export default function TransactionIntelligence({ selectedTransaction }) {
                     },
                     {
                       label: "Risk Score",
-                      value: `${probPercent}%`,
-                      mono: true,
+                      numericValue: parseFloat(probPercent) || 0,
+                      isRiskScore: true,
                       color: isApproved ? "var(--emerald)" : isReview ? "var(--amber)" : "var(--rose)",
                     },
                     {
@@ -227,19 +228,28 @@ export default function TransactionIntelligence({ selectedTransaction }) {
                     },
                   ].map((item, i) => (
                     <div key={i}>
-                      <div className="section-label" style={{ fontSize: 10, marginBottom: 2 }}>
+                      <div className="section-label" style={{ fontSize: 11, marginBottom: 2 }}>
                         {item.label}
                       </div>
                       {item.badge ? (
                         <span
-                          className={`status-indicator ${
+                          className={`status-tag ${
                             isApproved ? "status-approved" : isReview ? "status-review" : "status-blocked"
                           }`}
-                          style={{ fontSize: 13 }}
                         >
-                          <span className="status-dot" />
                           {item.value}
                         </span>
+                      ) : item.isRiskScore ? (
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            fontFamily: "var(--font-mono)",
+                            color: item.color,
+                          }}
+                        >
+                          <AnimatedNumber value={item.numericValue} decimals={1} suffix="%" />
+                        </div>
                       ) : (
                         <div
                           style={{
@@ -352,21 +362,26 @@ export default function TransactionIntelligence({ selectedTransaction }) {
                             />
 
                             {pos ? (
-                              <div
+                              <motion.div
+                                key={`${activeTx?.transaction_token}-pos-${i}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${pct / 2}%` }}
+                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                                 style={{
                                   height: "100%",
                                   background: "var(--rose)",
                                   marginLeft: "50%",
-                                  width: `${pct / 2}%`,
                                 }}
                               />
                             ) : (
-                              <div
+                              <motion.div
+                                key={`${activeTx?.transaction_token}-neg-${i}`}
+                                initial={{ width: 0, marginLeft: "50%" }}
+                                animate={{ width: `${pct / 2}%`, marginLeft: `${50 - pct / 2}%` }}
+                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                                 style={{
                                   height: "100%",
                                   background: "var(--emerald)",
-                                  marginLeft: `${50 - pct / 2}%`,
-                                  width: `${pct / 2}%`,
                                 }}
                               />
                             )}

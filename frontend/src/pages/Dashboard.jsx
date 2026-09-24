@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   RotateCw,
   Search,
@@ -7,9 +8,10 @@ import {
   ShieldAlert,
   CheckCircle2,
   Database,
-  User,
+  Inbox,
 } from "lucide-react";
 import { getDashboardStatistics, getTransactions } from "../services/api";
+import AnimatedNumber from "../components/AnimatedNumber";
 
 export default function Dashboard({ onSelectTransaction }) {
   const [stats, setStats] = useState(null);
@@ -86,27 +88,18 @@ export default function Dashboard({ onSelectTransaction }) {
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <span
-              className="status-indicator status-approved"
-              style={{ fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}
-            >
-              <span className="status-dot" />
-              Production Ingestion Stream
-            </span>
-            <span style={{ color: "var(--text-4)" }}>·</span>
-            <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
-              Continuous Ingestion
-            </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span className="section-label">Risk Surveillance</span>
           </div>
-          <h1 className="page-title">Operations & Risk Telemetry</h1>
+          <h1 className="page-title">Operations &amp; Risk Telemetry</h1>
           <p className="page-subtitle">
-            Audited settlement transactions, population risk stratification, and human-in-the-loop retraining pool.
+            Portfolio-wide settlement surveillance, population risk stratification, and human retraining queues.
           </p>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span
+            className="tabular-nums"
             style={{
               fontSize: 11,
               color: "var(--text-3)",
@@ -119,180 +112,277 @@ export default function Dashboard({ onSelectTransaction }) {
             onClick={refreshData}
             disabled={loading}
             className="btn-island-secondary"
-            style={{ padding: "6px 14px", fontSize: 12 }}
+            style={{ fontSize: 12, padding: "7px 14px" }}
           >
             <RotateCw
               style={{
-                width: 12,
-                height: 12,
+                width: 13,
+                height: 13,
                 animation: loading ? "spin 1s linear infinite" : "none",
               }}
             />
-            Refresh Telemetry
+            {loading ? "Polling..." : "Refresh Feed"}
           </button>
         </div>
       </div>
 
-      {/* 4 Double-Bezel KPI Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: 14,
-          marginBottom: 20,
-        }}
-      >
-        {[
-          {
-            label: "Processed Volume",
-            value: `$${(summary.total_volume_usd || 0).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
-            sub: `${summary.total_transactions} operations evaluated`,
-            icon: TrendingUp,
-          },
-          {
-            label: "Fraud Rate",
-            value: `${(summary.fraud_rate_pct || 0).toFixed(1)}%`,
-            sub: `${summary.fraud_flagged} anomalies caught`,
-            statusClass: summary.fraud_rate_pct > 5 ? "status-blocked" : "status-review",
-            badgeText: `${summary.fraud_flagged} flagged`,
-            icon: ShieldAlert,
-          },
-          {
-            label: "Clearance Ratio",
-            value: `${summary.approved || 0}`,
-            sub: `${summary.blocked || 0} blocked, ${summary.soft_blocked_pending || 0} held`,
-            statusClass: "status-approved",
-            badgeText: "Safe clearance",
-            icon: CheckCircle2,
-          },
-          {
-            label: "Retraining Pool",
-            value: `${summary.feedback_records_ready_for_retraining || 0}`,
-            sub: "Verified labels ready for training",
-            statusClass: "status-cobalt",
-            badgeText: "SMOTE Queue",
-            icon: Database,
-          },
-        ].map((kpi, i) => {
-          const Icon = kpi.icon;
-          return (
-            <div key={i} className="bezel-shell">
-              <div className="bezel-core" style={{ padding: "20px 22px" }}>
+      {/* Asymmetrical KPI Layout: 2x Hero KPI Spotlight + 3 Calibrated Companions */}
+      <div style={{ marginBottom: 20 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(12, 1fr)",
+            gap: 14,
+          }}
+        >
+          {/* Hero Spotlight KPI: Processed Volume (6 columns on desktop) */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28 }}
+            className="bezel-shell card-kpi-hero col-span-12 lg:col-span-6"
+          >
+            <div className="bezel-core" style={{ padding: "22px 26px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 12,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className="section-label" style={{ fontSize: 11 }}>
+                    Portfolio Settled Volume
+                  </span>
+                  <span
+                    className="status-tag status-tag-cobalt"
+                    style={{ fontSize: 11, padding: "1px 6px" }}
+                  >
+                    Hero Metric
+                  </span>
+                </div>
                 <div
                   style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: "var(--cobalt-light)",
+                    border: "1px solid var(--cobalt-border)",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 10,
+                    justifyContent: "center",
+                    color: "var(--cobalt)",
                   }}
                 >
-                  <span className="section-label" style={{ fontSize: 10 }}>
-                    {kpi.label}
-                  </span>
-                  {kpi.statusClass ? (
-                    <span className={`status-indicator ${kpi.statusClass}`} style={{ fontSize: 11 }}>
-                      <span className="status-dot" />
-                      {kpi.badgeText}
-                    </span>
-                  ) : (
-                    <div
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 6,
-                        background: "var(--shell-bg)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--text-1)",
-                      }}
-                    >
-                      <Icon style={{ width: 13, height: 13 }} />
-                    </div>
-                  )}
-                </div>
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 800,
-                    fontFamily: "var(--font-mono)",
-                    color: "var(--text-1)",
-                    letterSpacing: "-0.03em",
-                    marginBottom: 4,
-                  }}
-                >
-                  {kpi.value}
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 500 }}>
-                  {kpi.sub}
+                  <TrendingUp style={{ width: 16, height: 16 }} />
                 </div>
               </div>
+              <div className="kpi-numeral-hero" style={{ marginBottom: 6 }}>
+                <AnimatedNumber
+                  value={summary.total_volume_usd || 0}
+                  prefix="$"
+                  decimals={2}
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: 12,
+                  color: "var(--text-3)",
+                  paddingTop: 8,
+                  borderTop: "1px solid rgba(15, 23, 42, 0.05)",
+                }}
+              >
+                <span>{summary.total_transactions} operations evaluated</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--emerald)", fontWeight: 600 }}>
+                  100% TreeSHAP screened
+                </span>
+              </div>
             </div>
-          );
-        })}
+          </motion.div>
+
+          {/* Companion 1: Fraud Rate (2 cols) */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, delay: 0.06 }}
+            className="surface-card col-span-12 sm:col-span-4 lg:col-span-2"
+            style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span className="section-label" style={{ fontSize: 11 }}>Fraud Rate</span>
+                <div style={{ width: 26, height: 26, borderRadius: 6, background: "var(--rose-light)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--rose)" }}>
+                  <ShieldAlert style={{ width: 13, height: 13 }} />
+                </div>
+              </div>
+              <div className="kpi-numeral-standard" style={{ color: "var(--rose)", marginBottom: 4 }}>
+                <AnimatedNumber value={summary.fraud_rate_pct || 0} suffix="%" decimals={1} />
+              </div>
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 500 }}>
+              {summary.fraud_flagged} anomalies caught
+            </div>
+          </motion.div>
+
+          {/* Companion 2: Clearance Ratio (2 cols) */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, delay: 0.1 }}
+            className="surface-card col-span-12 sm:col-span-4 lg:col-span-2"
+            style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span className="section-label" style={{ fontSize: 11 }}>Clearance Ratio</span>
+                <div style={{ width: 26, height: 26, borderRadius: 6, background: "var(--emerald-light)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--emerald)" }}>
+                  <CheckCircle2 style={{ width: 13, height: 13 }} />
+                </div>
+              </div>
+              <div className="kpi-numeral-standard" style={{ color: "var(--emerald)", marginBottom: 4 }}>
+                <AnimatedNumber value={summary.approved || 0} decimals={0} />
+              </div>
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 500 }}>
+              {summary.blocked || 0} blocked, {summary.soft_blocked_pending || 0} held
+            </div>
+          </motion.div>
+
+          {/* Companion 3: Retraining Pool (2 cols) */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, delay: 0.14 }}
+            className="surface-card col-span-12 sm:col-span-4 lg:col-span-2"
+            style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span className="section-label" style={{ fontSize: 11 }}>Retraining Pool</span>
+                <div style={{ width: 26, height: 26, borderRadius: 6, background: "var(--shell-bg)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-2)" }}>
+                  <Database style={{ width: 13, height: 13 }} />
+                </div>
+              </div>
+              <div className="kpi-numeral-standard" style={{ color: "var(--text-1)", marginBottom: 4 }}>
+                <AnimatedNumber value={summary.feedback_records_ready_for_retraining || 0} decimals={0} />
+              </div>
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 500 }}>
+              Human feedback labels
+            </div>
+          </motion.div>
+        </div>
       </div>
 
-      {/* Population Stratification (Double-Bezel) */}
-      <div className="bezel-shell" style={{ marginBottom: 20 }}>
-        <div className="bezel-core" style={{ padding: "18px 24px" }}>
+      {/* Population Stratification: Instrument-Grade Risk Distribution */}
+      <div className="surface-card" style={{ marginBottom: 20 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 14,
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="section-label" style={{ fontSize: 11 }}>Instrument Envelope</span>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text-1)" }}>
+                Population Risk Stratification
+              </span>
+            </div>
+            <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+              Active settlement distribution calibrated against the 3-tier operational boundary.
+            </p>
+          </div>
+
           <div
+            className="tabular-nums"
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 12,
-              flexWrap: "wrap",
-              gap: 12,
+              gap: 14,
+              fontSize: 11,
+              fontFamily: "var(--font-mono)",
             }}
           >
-            <div>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>
-                Population Risk Stratification
-              </span>
-              <span style={{ fontSize: 12, color: "var(--text-3)", marginLeft: 8 }}>
-                (Overall distribution across all monitored transactions)
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11, fontFamily: "var(--font-mono)" }}>
-              <span style={{ color: "var(--emerald)", fontWeight: 700 }}>
-                &bull; Low Risk ({pctLow}%) &bull; {riskDist.low}
-              </span>
-              <span style={{ color: "var(--amber)", fontWeight: 700 }}>
-                &bull; 3DS2 Review ({pctReview}%) &bull; {riskDist.review}
-              </span>
-              <span style={{ color: "var(--rose)", fontWeight: 700 }}>
-                &bull; High Risk ({pctHigh}%) &bull; {riskDist.high}
-              </span>
-            </div>
+            <span style={{ color: "var(--emerald)", fontWeight: 700 }}>
+              Low: {pctLow}% ({riskDist.low})
+            </span>
+            <span style={{ color: "var(--amber)", fontWeight: 700 }}>
+              Challenge: {pctReview}% ({riskDist.review})
+            </span>
+            <span style={{ color: "var(--rose)", fontWeight: 700 }}>
+              Blocked: {pctHigh}% ({riskDist.high})
+            </span>
           </div>
+        </div>
 
+        {/* Calibrated Instrument Track with Micro Gaps */}
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: 10,
+            borderRadius: 6,
+            background: "var(--shell-bg)",
+            display: "flex",
+            overflow: "hidden",
+            gap: 2,
+            padding: 1,
+          }}
+        >
           <div
             style={{
-              width: "100%",
-              height: 6,
-              borderRadius: 99,
-              background: "var(--shell-bg)",
-              display: "flex",
-              overflow: "hidden",
-              gap: 2,
+              width: `${pctLow}%`,
+              background: "var(--emerald)",
+              borderRadius: "4px 0 0 4px",
+              transition: "width 240ms ease",
             }}
-          >
-            <div
-              style={{ width: `${pctLow}%`, background: "var(--emerald)" }}
-              title={`Low Risk: ${pctLow}%`}
-            />
-            <div
-              style={{ width: `${pctReview}%`, background: "var(--amber)" }}
-              title={`Review: ${pctReview}%`}
-            />
-            <div
-              style={{ width: `${pctHigh}%`, background: "var(--rose)" }}
-              title={`High Risk: ${pctHigh}%`}
-            />
-          </div>
+            title={`Low Risk (&lt;0.35): ${pctLow}%`}
+          />
+          <div
+            style={{
+              width: `${pctReview}%`,
+              background: "var(--amber)",
+              transition: "width 240ms ease",
+            }}
+            title={`3DS2 Challenge (0.35 - 0.70): ${pctReview}%`}
+          />
+          <div
+            style={{
+              width: `${pctHigh}%`,
+              background: "var(--rose)",
+              borderRadius: "0 4px 4px 0",
+              transition: "width 240ms ease",
+            }}
+            title={`Hard Block (&ge;0.70): ${pctHigh}%`}
+          />
+        </div>
+
+        {/* Instrument Ticks and Calibration Points */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 11,
+            fontFamily: "var(--font-mono)",
+            color: "var(--text-3)",
+            marginTop: 8,
+            paddingTop: 4,
+            borderTop: "1px dashed rgba(15, 23, 42, 0.08)",
+          }}
+        >
+          <span>0.00 (Autonomous Pass)</span>
+          <span style={{ color: "var(--amber)", fontWeight: 600 }}>&uarr; 0.35 Threshold (3DS2 OTP)</span>
+          <span style={{ color: "var(--rose)", fontWeight: 600 }}>&uarr; 0.70 Threshold (Immediate Block)</span>
+          <span>1.00 (Critical Fraud)</span>
         </div>
       </div>
 
@@ -364,6 +454,7 @@ export default function Dashboard({ onSelectTransaction }) {
           <input
             type="text"
             placeholder="Search token or user ID..."
+            aria-label="Search transactions by token or user ID"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="input-machined"
@@ -378,12 +469,11 @@ export default function Dashboard({ onSelectTransaction }) {
         </div>
       </div>
 
-      {/* Transactions Table inside Double-Bezel Enclosure */}
-      <div className="bezel-shell" style={{ overflow: "hidden", marginBottom: 32 }}>
-        <div className="bezel-core" style={{ padding: 0, overflow: "hidden" }}>
-          <div className="overflow-x-auto">
+      {/* Transactions Table (Clean hairline container, rationing bezels) */}
+      <div className="surface-card" style={{ padding: 0, overflow: "hidden", marginBottom: 32 }}>
+        <div className="overflow-x-auto">
             <table
-              className="table-machined"
+              className="table-machined table-mobile-cards"
               style={{
                 width: "100%",
                 borderCollapse: "collapse",
@@ -432,11 +522,22 @@ export default function Dashboard({ onSelectTransaction }) {
                     return (
                       <tr
                         key={tx.id || tx.transaction_token || i}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Transaction ${tx.transaction_token}, user ${tx.user_id}, amount $${(tx.amount || 0).toFixed(2)}, status ${tx.status}`}
                         style={{
                           borderBottom: "1px solid var(--shell-bg)",
                           cursor: "pointer",
                         }}
-                        onClick={() => onSelectTransaction && onSelectTransaction(tx)}
+                        onClick={() => {
+                          if (onSelectTransaction) onSelectTransaction(tx);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (onSelectTransaction) onSelectTransaction(tx);
+                          }
+                        }}
                       >
                         <td
                           style={{
@@ -495,7 +596,7 @@ export default function Dashboard({ onSelectTransaction }) {
                         </td>
                         <td style={{ padding: "13px 18px" }}>
                           <span
-                            className={`status-indicator ${
+                            className={`status-tag ${
                               ok
                                 ? "status-approved"
                                 : isReview
@@ -503,15 +604,16 @@ export default function Dashboard({ onSelectTransaction }) {
                                 : "status-blocked"
                             }`}
                           >
-                            <span className="status-dot" />
                             {tx.status}
                           </span>
                         </td>
                         <td style={{ padding: "13px 18px", textAlign: "right" }}>
                           <button
+                            type="button"
+                            aria-label={`Inspect transaction ${tx.transaction_token}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              onSelectTransaction && onSelectTransaction(tx);
+                              if (onSelectTransaction) onSelectTransaction(tx);
                             }}
                             className="btn-island-secondary"
                             style={{
@@ -526,17 +628,69 @@ export default function Dashboard({ onSelectTransaction }) {
                       </tr>
                     );
                   })
+                ) : loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} style={{ borderBottom: "1px solid var(--shell-bg)" }}>
+                      <td style={{ padding: "14px 18px" }}><div className="skeleton skeleton-text" style={{ width: 90 }} /></td>
+                      <td style={{ padding: "14px 18px" }}><div className="skeleton skeleton-text" style={{ width: 70 }} /></td>
+                      <td style={{ padding: "14px 18px" }}><div className="skeleton skeleton-text" style={{ width: 60 }} /></td>
+                      <td style={{ padding: "14px 18px" }}><div className="skeleton skeleton-text" style={{ width: 50 }} /></td>
+                      <td style={{ padding: "14px 18px" }}><div className="skeleton skeleton-text" style={{ width: 45 }} /></td>
+                      <td style={{ padding: "14px 18px" }}><div className="skeleton skeleton-text" style={{ width: 80 }} /></td>
+                      <td style={{ padding: "14px 18px", textAlign: "right" }}><div className="skeleton skeleton-text" style={{ width: 55, marginLeft: "auto" }} /></td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td
                       colSpan={7}
                       style={{
-                        padding: "48px 18px",
+                        padding: "54px 18px",
                         textAlign: "center",
-                        color: "var(--text-3)",
                       }}
                     >
-                      No matching records found.
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 12,
+                            background: "var(--shell-bg)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "var(--text-3)",
+                          }}
+                        >
+                          <Inbox style={{ width: 22, height: 22 }} />
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>
+                          No matching records found
+                        </div>
+                        <p style={{ fontSize: 12, color: "var(--text-3)", maxWidth: 300, lineHeight: 1.5 }}>
+                          No transactions match the current filter or search criteria.
+                        </p>
+                        {(filter !== "ALL" || searchTerm) && (
+                          <button
+                            onClick={() => {
+                              setFilter("ALL");
+                              setSearchTerm("");
+                            }}
+                            className="btn-island-secondary"
+                            style={{ marginTop: 6, fontSize: 12, padding: "5px 14px" }}
+                          >
+                            Reset filters & search
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -545,6 +699,5 @@ export default function Dashboard({ onSelectTransaction }) {
           </div>
         </div>
       </div>
-    </div>
   );
 }
