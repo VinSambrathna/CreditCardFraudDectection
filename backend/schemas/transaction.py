@@ -38,8 +38,11 @@ class TransactionOut(BaseModel):
 
     id: int
     transaction_token: str
+    institution_id: Optional[int] = None
     user_id: int
     amount: float
+    currency: str = "USD"
+    payment_method: str = "KHQR"
     distance: float
     time_delta: float
     merchant_risk: float

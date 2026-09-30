@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Navbar from "./components/Navbar";
+import AppShell from "./components/AppShell";
 import Landing from "./pages/Landing";
-import Checkout from "./pages/Checkout";
+import BankSimulator from "./pages/BankSimulator";
 import TransactionResult from "./pages/TransactionResult";
 import Dashboard from "./pages/Dashboard";
 import TransactionIntelligence from "./pages/TransactionIntelligence";
 import ModelIntelligence from "./pages/ModelIntelligence";
+import FraudAlerts from "./pages/FraudAlerts";
+import InstitutionIntegration from "./pages/InstitutionIntegration";
+import DataPrivacy from "./pages/DataPrivacy";
+import ApiDocumentation from "./pages/ApiDocumentation";
 import { checkBackendHealth } from "./services/api";
 
 const pageVariants = {
@@ -57,20 +61,32 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("checkout");
+  const [activeTab, setActiveTab] = useState("simulator");
   const [currentTransaction, setCurrentTransaction] = useState(null);
   const [selectedAuditTransaction, setSelectedAuditTransaction] = useState(null);
   const [backendHealthy, setBackendHealthy] = useState(true);
+  const [selectedRole, setSelectedRole] = useState(() => {
+    try {
+      return window.localStorage.getItem("sp.stakeholder.role") || "all";
+    } catch {
+      return "all";
+    }
+  });
 
-  // Hash-based routing for /pay vs /ops
+  // Hash-based routing
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace("#/", "").replace("#", "");
-      if (hash === "pay" || hash === "checkout") setActiveTab("checkout");
+      if (hash === "mobile" || hash === "phone") setActiveTab("mobile");
+      else if (hash === "simulator" || hash === "pay" || hash === "checkout") setActiveTab("simulator");
       else if (hash === "verdict" || hash === "result") setActiveTab("result");
+      else if (hash === "alerts" || hash === "feed") setActiveTab("alerts");
       else if (hash === "ops" || hash === "dashboard") setActiveTab("dashboard");
       else if (hash === "investigate" || hash === "intelligence") setActiveTab("intelligence");
       else if (hash === "model") setActiveTab("model");
+      else if (hash === "integration" || hash === "institutions") setActiveTab("integration");
+      else if (hash === "docs" || hash === "api_docs") setActiveTab("api_docs");
+      else if (hash === "privacy") setActiveTab("privacy");
       else if (hash === "overview" || hash === "landing") setActiveTab("landing");
     };
     handleHash();
@@ -78,15 +94,21 @@ export default function App() {
     return () => window.removeEventListener("hashchange", handleHash);
   }, []);
 
-  // Update hash when activeTab changes (replaceState to avoid history pollution)
+  // Sync window hash when activeTab changes
   useEffect(() => {
     const hashMap = {
-      checkout: "#/pay",
-      result: "#/pay/verdict",
-      dashboard: "#/ops",
-      intelligence: "#/ops/investigate",
-      model: "#/ops/model",
       landing: "#/overview",
+      mobile: "#/mobile",
+      simulator: "#/simulator",
+      checkout: "#/simulator",
+      result: "#/verdict",
+      alerts: "#/alerts",
+      dashboard: "#/dashboard",
+      intelligence: "#/investigate",
+      model: "#/model",
+      integration: "#/integration",
+      api_docs: "#/docs",
+      privacy: "#/privacy"
     };
     const newHash = hashMap[activeTab];
     if (newHash && window.location.hash !== newHash) {
@@ -105,22 +127,22 @@ export default function App() {
   }, []);
 
   const handleTransactionComplete = (result, rawPayload) => {
-    const isVance = rawPayload.user_id === 1002;
     const tx = {
       ...result,
       amount: rawPayload.amount,
-      user_id: rawPayload.user_id,
-      distance: rawPayload.distance,
-      card_brand: isVance ? "Mastercard World Elite" : "Visa Signature",
-      card_last4: isVance ? "1002" : "8821",
-      cardholder_name: isVance ? "Jonathan Vance" : "Alex Morgan",
+      user_id: rawPayload.user_id || 1001,
+      currency: rawPayload.currency || "USD",
+      payment_method: rawPayload.payment_method || "KHQR",
+      cardholder_name: "Sophea Sok (Customer)",
+      card_brand: rawPayload.payment_method === "KHQR" ? "KHQR (Bakong)" : "Visa Signature",
+      card_last4: "8821"
     };
     setCurrentTransaction(tx);
     setSelectedAuditTransaction(tx);
-    setActiveTab("result");
+    // Stay in Bank Simulator so user views the authentic mobile app screen/receipt directly on phone
   };
 
-  const handleSelectFromDashboard = (tx) => {
+  const handleSelectTransactionForForensics = (tx) => {
     setSelectedAuditTransaction(tx);
     setActiveTab("intelligence");
   };
@@ -131,23 +153,60 @@ export default function App() {
         return (
           <Landing
             key="landing"
-            onEnterCustomer={() => setActiveTab("checkout")}
-            onEnterOps={() => setActiveTab("dashboard")}
+            onEnterCustomer={() => {
+              setSelectedRole("customer");
+              try { window.localStorage.setItem("sp.stakeholder.role", "customer"); } catch {}
+              setActiveTab("simulator");
+            }}
+            onEnterOps={() => {
+              setSelectedRole("analyst");
+              try { window.localStorage.setItem("sp.stakeholder.role", "analyst"); } catch {}
+              setActiveTab("alerts");
+            }}
+            onEnterIntegration={() => {
+              setSelectedRole("platform");
+              try { window.localStorage.setItem("sp.stakeholder.role", "platform"); } catch {}
+              setActiveTab("integration");
+            }}
+            onEnterPrivacy={() => {
+              setSelectedRole("executive");
+              try { window.localStorage.setItem("sp.stakeholder.role", "executive"); } catch {}
+              setActiveTab("privacy");
+            }}
           />
         );
+      case "simulator":
       case "checkout":
-        return <Checkout key="checkout" onTransactionComplete={handleTransactionComplete} />;
+        return (
+          <BankSimulator
+            key="simulator"
+            onTransactionComplete={handleTransactionComplete}
+            onNavigateToIntelligence={() => setActiveTab("intelligence")}
+          />
+        );
       case "result":
         return (
           <TransactionResult
             key="result"
             transaction={currentTransaction}
-            onReset={() => setActiveTab("checkout")}
+            onReset={() => setActiveTab("simulator")}
             onNavigateToIntelligence={() => setActiveTab("intelligence")}
           />
         );
+      case "alerts":
+        return (
+          <FraudAlerts
+            key="alerts"
+            onSelectTransaction={handleSelectTransactionForForensics}
+          />
+        );
       case "dashboard":
-        return <Dashboard key="dashboard" onSelectTransaction={handleSelectFromDashboard} />;
+        return (
+          <Dashboard
+            key="dashboard"
+            onSelectTransaction={handleSelectTransactionForForensics}
+          />
+        );
       case "intelligence":
         return (
           <TransactionIntelligence
@@ -157,20 +216,50 @@ export default function App() {
         );
       case "model":
         return <ModelIntelligence key="model" />;
+      case "integration":
+        return <InstitutionIntegration key="integration" />;
+      case "api_docs":
+        return <ApiDocumentation key="api_docs" />;
+      case "privacy":
+        return <DataPrivacy key="privacy" />;
       default:
-        return <Checkout key="checkout" onTransactionComplete={handleTransactionComplete} />;
+        return (
+          <BankSimulator
+            key="simulator"
+            onTransactionComplete={handleTransactionComplete}
+            onNavigateToIntelligence={() => setActiveTab("intelligence")}
+          />
+        );
     }
   };
 
+  if (activeTab === "mobile") {
+    return (
+      <div className="standalone-mobile-container">
+        <ErrorBoundary>
+          <BankSimulator
+            standalone={true}
+            onTransactionComplete={handleTransactionComplete}
+            onNavigateToIntelligence={() => {
+              window.location.hash = "#/investigate";
+            }}
+          />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-dvh flex flex-col" style={{ background: "var(--canvas)", color: "var(--text-2)" }}>
-      <Navbar
+    <div className="app-frame">
+      <AppShell
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentTransaction={currentTransaction}
         backendHealthy={backendHealthy}
+        selectedRole={selectedRole}
+        setSelectedRole={setSelectedRole}
       />
-      <main className="flex-1">
+      <main className="app-main">
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             <motion.div
@@ -185,42 +274,6 @@ export default function App() {
           </AnimatePresence>
         </ErrorBoundary>
       </main>
-      <footer
-        style={{
-          borderTop: "1px solid var(--shell-border)",
-          padding: "16px 0",
-          background: "var(--core-bg)",
-          marginTop: "auto",
-        }}
-      >
-        <div
-          className="page-container"
-          style={{
-            padding: "0 24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 12,
-            fontSize: "11px",
-            color: "var(--text-3)",
-            fontFamily: "var(--font-mono)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontWeight: 700, color: "var(--text-1)" }}>SentinelPay</span>
-            <span>/</span>
-            <span>Risk Evaluation Engine</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span>XGBoost 45-Tree Ensemble</span>
-            <span>&bull;</span>
-            <span>Exact TreeSHAP</span>
-            <span>&bull;</span>
-            <span>SMOTE Calibrated</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

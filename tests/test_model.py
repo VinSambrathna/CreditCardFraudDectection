@@ -96,3 +96,52 @@ def test_high_risk_prediction_and_fast_shap(model_assets):
     else:
         vals = shap_vals[0]
     assert len(vals) == len(features)
+
+def test_model_failure_graceful_fallback():
+    """
+    Verifies Requirement 5 (Reliability & failure handling):
+    When the ML model or preprocessor encounters a runtime failure,
+    PredictionService and ShapService gracefully degrade to deterministic heuristic rules
+    without crashing the payment rail or dropping transactions.
+    """
+    from backend.services.prediction_service import PredictionService
+    from backend.services.shap_service import ShapService
+    from backend.schemas.transaction import PredictRequest
+
+    pred_service = PredictionService.get_instance()
+    shap_service = ShapService.get_instance()
+
+    # Save original model reference to restore later
+    original_model = pred_service.model
+    try:
+        # Simulate model runtime failure / outage
+        pred_service.model = None
+
+        req = PredictRequest(
+            user_id=9999,
+            amount=1500.0,
+            distance=250.0,
+            time_delta=0.2,
+            merchant_risk=0.8,
+            device_trust=0.2,
+            velocity_1h=5,
+            velocity_24h=8
+        )
+
+        prob, pred, risk_level, status, requires_verification, raw_df, scaled_matrix = pred_service.predict(req)
+
+        # Assert fail-safe posture: high-risk inputs are soft-blocked and flagged for review
+        assert pred_service.is_last_prediction_fallback is True
+        assert risk_level in ["REVIEW", "HIGH"]
+        assert status == "SOFT_BLOCKED"
+        assert requires_verification is True
+        assert scaled_matrix is None
+
+        # Assert ShapService provides structured heuristic attribution during outage
+        explanations = shap_service.explain_transaction(raw_df, scaled_matrix)
+        assert len(explanations) == len(pred_service.features)
+        assert explanations[0]["direction"] in ["RISK_INCREASING", "RISK_DECREASING"]
+    finally:
+        # Restore original model
+        pred_service.model = original_model
+        pred_service.is_last_prediction_fallback = False

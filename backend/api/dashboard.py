@@ -3,7 +3,8 @@ SentinelPay - Dashboard Statistics & Model Information Router
 Handles GET /dashboard/statistics and GET /model/info
 """
 
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from backend.database.connection import get_db
 from backend.database import crud
@@ -12,8 +13,11 @@ from backend.services.prediction_service import PredictionService
 router = APIRouter(prefix="", tags=["Dashboard & Model Intelligence"])
 
 @router.get("/dashboard/statistics")
-def get_dashboard_statistics(db: Session = Depends(get_db)):
-    return crud.get_dashboard_statistics(db)
+def get_dashboard_statistics(
+    institution_id: Optional[int] = Query(None, description="Optional institution ID to scope statistics"),
+    db: Session = Depends(get_db)
+):
+    return crud.get_dashboard_statistics(db, institution_id=institution_id)
 
 @router.get("/model/info")
 def get_model_info(db: Session = Depends(get_db)):

@@ -1,194 +1,151 @@
-# SentinelPay -- Capstone Demonstration Script
+# SentinelPay — Capstone Live Demonstration Script
+## Multi-Tenant AI Fraud Intelligence Platform
 
-## Pre-Demonstration Setup
+---
 
-### Terminal 1: Start Backend
+## 1. Pre-Demonstration Setup
+
+### Terminal 1: FastAPI Backend
 ```bash
 python -m uvicorn backend.main:app --reload --port 8000
 ```
-Wait for `[INIT] SentinelPay Backend Services & SHAP Engine Initialized.` to appear.
+*Expected log:* `[INIT] SentinelPay Backend Services, Gateway & SHAP Engine Initialized.`
 
-### Terminal 2: Start Frontend
+### Terminal 2: React Vite Frontend
 ```bash
 cd frontend
 npm run dev
 ```
-Wait for `Local: http://localhost:5173/` to appear.
+*Expected log:* `Local: http://localhost:5173/`
 
-### Browser
-Open `http://localhost:5173` in Chrome or Edge. The SentinelPay institutional banking interface should load with a dark obsidian theme.
-
----
-
-## Demonstration Flow (15-20 minutes)
-
-### Act 1: System Overview (2 minutes)
-
-**Navigate to:** Model Intelligence page (via sidebar).
-
-**Talking Points:**
-- "SentinelPay is an end-to-end AI credit card fraud detection system. It is not just a Jupyter notebook -- it is a fully integrated product with a machine learning backend, explainable AI, a dynamic verification state machine, and a production-ready React frontend."
-- Point to the performance benchmarks: "Our champion XGBoost model achieves **97.93% precision** and **98.61% recall** on an untouched holdout test set of 12,000 transactions, with a PR-AUC of 0.999."
-- Point to the confusion matrix: "On 12,000 test transactions, the model produced only **3 false positives** and missed only **2 fraud cases**."
-- Point to the global SHAP rankings: "Using TreeSHAP, we can rank feature importance: distance from home, device trust, and time since last transaction are the top three drivers."
-- Point to the threshold calibration table: "Instead of a fixed 0.50 cutoff, we calibrated three operational tiers mapped to real business actions."
+### Browser Access
+Open `http://localhost:5173` in Google Chrome or Microsoft Edge.
 
 ---
 
-### Act 2: Scenario A -- Legitimate Transaction (3 minutes)
+## 2. Live Demonstration Flow (15 Minutes)
 
-**Navigate to:** Checkout Terminal page (via sidebar).
+### Act 1: The B2B Architecture Pitch (2 Minutes)
+**Navigate to:** `#/overview` (Landing Page)
 
-**Steps:**
-1. Click the **"Routine Everyday Grocery"** preset button.
-   - This loads: $38.50 amount, 4.2km distance, trusted device (0.98), low merchant risk (0.08).
-2. Point out the virtual card preview with EMV chip and masked PAN.
-3. Click **"Authorize Transaction"**.
+**Talking Points for Examiners:**
+1. *"SentinelPay is not just a standalone payment demo. It is a multi-tenant AI fraud intelligence platform that commercial banks (like ABA Bank, ACLEDA Bank, and Wing Bank) integrate into their existing core banking switches."*
+2. *"Our system operates across 3 interconnected layers:*
+   * **Part A:** The external Bank & Customer Simulator.
+   * **Part B:** The SentinelPay Integration Gateway, ML Classifier (XGBoost) & TreeSHAP Engine.
+   * **Part C:** The Fraud Analyst Operations & Forensics Portal.*"
+
+---
+
+### Act 2: Demo 1 — Routine KHQR Payment Auto-Cleared (2 Minutes)
+**Navigate to:** `#/simulator` (Bank Simulator)
+
+**Actions:**
+1. Verify the selected institution is **ABA Bank (Simulated)**.
+2. Click **Scenario A: Normal KHQR**.
+   * Merchant: *Phnom Penh Coffee (BKK1)*
+   * Amount: *$8.50 USD* via *KHQR*
+   * Geolocation: *1.2 km from home* | Device Trust: *98%*
+3. Click **"Pay $8.50 via KHQR"**.
 
 **Expected Result:**
-- Response code: `AUTH 00: APPROVED`
-- Risk Level: `LOW`
-- Fraud probability: near 0.00%
-- Status: `APPROVED` (auto-cleared, no MFA required)
+* The phone displays the authentic **In-App Native Push Notification**: `ABA Mobile • Transfer Successful (SentinelPay Shield: Cleared 3.4%)`.
+* The phone renders the **Official ABA Transfer Slip**:
+  * Clean authentic receipt design with reference token, settled amount, and Bakong KHQR network tags.
+  * **🔥 Embedded SentinelPay Trust & Safety Badge**: Shows risk probability (<4% Low Risk), latency (~18ms), device trust (98%), and radial distance (1.2 km).
+  * **Interactive TreeSHAP feature contributions** can be expanded directly on the customer's mobile receipt slip.
+* Balance decreases smoothly with zero customer friction.
 
-**Talking Points:**
-- "The model correctly identifies this as a routine transaction. The customer experiences zero friction -- the payment clears instantly."
-- Point to the SHAP explanation section: "The top negative contributors are high device trust and short distance, which push the probability away from fraud."
+**Talking Points for Lecturer / Examiners:**
+* *"Notice how practical this is: Rather than only showing an alert on an administrative back-office dashboard, the real-world bank mobile app itself receives and renders the SentinelPay AI clearance audit directly inside the customer's transfer slip."*
+* *"The customer sees transparent, explainable proof of trust while experiencing seamless sub-20ms clearing."*
 
 ---
 
-### Act 3: Scenario B -- Suspicious Purchase with MFA Resolution (5 minutes)
+### Act 3: Demo 2 & 3 — Suspicious Attack & Step-Up Verification (4 Minutes)
+**Navigate to:** `#/simulator` (Bank Simulator)
 
-**Navigate to:** Checkout Terminal page.
-
-**Steps:**
-1. Click the **"High-Value Travel Spree"** preset button.
-   - This loads: $1,850.00 amount, 890km distance, untrusted device (0.12), high merchant risk (0.85).
-2. Click **"Authorize Transaction"**.
+**Actions:**
+1. Click **Scenario C: Confirmed Fraud**.
+   * Merchant: *Poipet Border Duty Free*
+   * Amount: *$1,800.00 USD*
+   * Distance: *850 km* | Device Trust: *10% (Unrecognized foreign proxy)*
+2. Click **"Pay $1,800.00 via KHQR"**.
 
 **Expected Result:**
-- Response code: `AUTH 85: SOFT BLOCK / STRONG CUSTOMER AUTHENTICATION REQUIRED`
-- Risk Level: `HIGH`
-- Fraud probability: ~99.98%
-- Status: `SOFT_BLOCKED`
-- The **Step-Up MFA Challenge Modal** appears automatically.
+* Gateway evaluates risk at **87%+ (HIGH Risk)** and triggers **STEP_UP_REQUIRED**.
+* Payment is paused in `SOFT_BLOCKED`.
+* The phone displays the **Bank-Controlled Step-Up Security Screen**:
+  * An urgent in-app alert banner: `⚠️ SentinelPay Risk Advisory: Unusual Activity Detected`.
+  * Rationale displayed: `Poipet Border Duty Free ($1,800.00) flagged for travel anomaly (850 km) & 10% device trust`.
+  * Realistic customer authentication options: 4-digit Bank PIN or Biometric FaceID scan.
 
 **Talking Points:**
-- "The model has flagged this as high risk. But instead of hard-blocking the customer, SentinelPay enters a dynamic verification loop."
-- "This simulates PSD2 Strong Customer Authentication (3DS2). The cardholder receives a 6-digit OTP challenge."
-- Point to the SHAP waterfall: "Distance from home contributes +5.4 to the risk score. The untrusted device adds +2.5. These are the top two reasons the model flagged this transaction."
+* *"Notice that SentinelPay does NOT authenticate the customer directly. SentinelPay advises the bank: 'This transaction is high risk; execute step-up authentication.'"*
+* *"The bank challenges the customer via SMS OTP or FaceID."*
 
-3. In the MFA modal, the 6-digit code `123456` should already be pre-filled.
-4. Click **"Authorize & Release Payment"**.
+3. In the modal, explain: *"The cardholder realizes they did not make this purchase at the border."*
+4. Click **"I Did Not Authorize This (Block & Report)"**.
 
 **Expected Result:**
-- Status transitions: `SOFT_BLOCKED` -> `VERIFIED`
-- Message: "Transaction successfully verified and payment released."
-- A feedback record is written to the database with `final_label = 0` (legitimate).
+* Bank sends callback to `POST /api/v1/verification/result`.
+* State machine mutates transaction from `SOFT_BLOCKED` directly to **`BLOCKED`**.
+* The mobile phone renders the **Authentic Bank Fraud Interception & Defense Screen**:
+  * Pulsing red security shield: `Transaction Blocked by SentinelPay Fraud Engine`.
+  * Prominent reassurance: `No Money Was Deducted ($0.00 Debited)`.
+  * Full breakdown of hostile indicators (850 km border anomaly, 10% device trust, TreeSHAP attributions).
+  * Direct customer action: **"Freeze Visa Card & Account"** button inside the app.
+* Feedback is tagged with `final_label = 1` for governed offline retraining.
+
+---
+
+### Act 4: Demo 4 & 5 — Real-Time Alert Stream & TreeSHAP Forensics (3 Minutes)
+**Navigate to:** `#/alerts` (Live Alerts Feed)
+
+**Actions:**
+1. Observe the top row: The `$1,800.00` intercepted transaction appears in the live feed.
+2. Note the **WebSocket live stream badge** (`ws://localhost:8000/ws/alerts`).
+3. Click **"SHAP Waterfall"** on that transaction (navigates to Forensics).
+
+**Talking Points on Forensics Page:**
+* *"Explainable AI is central to banking compliance. We compute exact Shapley values using TreeSHAP in under 10 milliseconds."*
+* Point to the waterfall bars:
+  * Distance (+5.4 log-odds) pushes the score toward fraud.
+  * Device trust (+2.3 log-odds) pushes the score toward fraud.
+  * Time delta (+0.9 log-odds) confirms velocity anomaly.
+* *"The bank fraud analyst can justify the block to regulators and customers with mathematical certainty."*
+
+---
+
+### Act 5: Demo 6 — Privacy by Design (2 Minutes)
+**Navigate to:** `#/privacy` (Data Privacy Screen)
+
+**Talking Points for Examiners:**
+1. *"One of the greatest obstacles to deploying AI in banking is customer privacy and bank secrecy."*
+2. Point to the matrix:
+   * **What SentinelPay Receives:** Only mathematical behavioral metrics (amount, radial distance, device confidence score, MCC risk).
+   * **What SentinelPay NEVER Receives:** Passwords, card PINs, raw 16-digit PANs, CVV, OTP codes, KYC national IDs, or customer bank balances.
+3. *"Identity and authentication remain inside the bank. SentinelPay is a pure risk intelligence layer."*
+
+---
+
+### Act 6: Demo 7 — Developer API & Multi-Tenancy (2 Minutes)
+**Navigate to:** `#/docs` (API Specification) or `#/integration` (Institutions)
+
+**Actions:**
+1. Show the standardized `POST /api/v1/fraud/check` specification.
+2. Select **ACLEDA Bank** and copy the cURL command.
+3. Open `http://localhost:8000/docs` in a new tab to show the live FastAPI OpenAPI documentation.
+4. Execute `POST /api/v1/fraud/check` directly in Swagger with header `X-API-KEY: aba_sandbox_live_key_9f83a`.
 
 **Talking Points:**
-- "The customer has confirmed their identity. The payment is released, and a feedback record is logged. This feedback will be used in the next retraining cycle to teach the model that high-distance transactions from this cardholder may be legitimate travel."
+* *"The platform is completely production-ready with OpenAPI 3.0 specs, tenant-scoped API authentication, anti-IDOR authorization checks, and multi-tenant database isolation."*
 
 ---
 
-### Act 4: Scenario C -- Account Takeover Attack (4 minutes)
-
-**Navigate to:** Checkout Terminal page.
-
-**Steps:**
-1. Click the **"Account Takeover Attack"** preset button.
-   - This loads: $2,650.00 amount, 2,100km distance, untrusted device (0.05), very high merchant risk (0.92).
-2. Click **"Authorize Transaction"**.
-
-**Expected Result:**
-- Response code: `AUTH 85: SOFT BLOCK`
-- Risk Level: `HIGH`
-- Fraud probability: ~99.98%
-- The MFA Challenge Modal appears.
-
-3. In the MFA modal, click **"Deny & Confirm Fraud"** (the red button).
-
-**Expected Result:**
-- Status transitions: `SOFT_BLOCKED` -> `BLOCKED`
-- Message: "Transaction blocked. Security feedback logged for future model retraining."
-- A feedback record is written with `final_label = 1` (confirmed fraud).
-
-**Talking Points:**
-- "In this scenario, the real cardholder sees a transaction they did not initiate. By clicking Deny, they confirm it as fraud. The transaction is permanently blocked, and this confirmed-fraud label enters the retraining feedback pool."
-- "This closes the human-in-the-loop. The model learns from every cardholder decision."
-
----
-
-### Act 5: SHAP Intelligence Deep Dive (2 minutes)
-
-**Navigate to:** Transaction Intelligence page.
-
-**Talking Points:**
-- "This page provides a full SHAP waterfall visualization for any past transaction."
-- Select a transaction from the audit stream on the left.
-- "Red bars push the probability toward fraud. Green bars push it toward legitimate. The model is fully transparent -- we can explain every single decision."
-
----
-
-### Act 6: Admin Surveillance Dashboard (2 minutes)
-
-**Navigate to:** Dashboard page.
-
-**Talking Points:**
-- Point to KPI cards: "Total volume processed, fraud interception rate, and the number of feedback records ready for retraining."
-- Point to the risk distribution bar: "This shows the operational distribution across LOW, REVIEW, and HIGH tiers."
-- Point to the audit table: "Every transaction is logged with its token, amount, risk level, and status. Analysts can search and filter in real time."
-
----
-
-### Act 7: Human-in-the-Loop Retraining (2 minutes)
-
-**In Terminal 3 (separate from running servers):**
-```bash
-python ml/scripts/retrain_feedback_loop.py
-```
-
-**Expected Output:**
-- The script queries feedback records from the database.
-- Augments the training set with verified cardholder labels.
-- Retrains XGBoost with SMOTE on the augmented training split.
-- Evaluates on the untouched holdout test set.
-- If quality gate passes (PR-AUC >= 0.95, Recall >= 0.90), promotes the new model version.
-
-**Talking Points:**
-- "This is the complete human-in-the-loop feedback cycle. Every cardholder verification action feeds back into the model's training data. The model continuously improves from real-world decisions."
-
----
-
-## Backup: Terminal-Only Demo
-
-If the frontend is unavailable, run the complete 3-scenario demonstration in terminal:
-```bash
-python test_demo_flow.py
-```
-This executes all three scenarios through the FastAPI backend and prints results to stdout.
-
----
-
-## Test Suite Verification
-
-To demonstrate code quality and test coverage:
-```bash
-python -m pytest tests/ -v
-```
-Expected: **19/19 tests passing** (unit tests, integration tests, verification flow tests, and edge cases).
-
----
-
-## Key Technical Details for Q&A
-
-| Topic | Answer |
-|:------|:-------|
-| **Why XGBoost over Random Forest?** | XGBoost achieves 97.93% precision vs 94.67% for RF (62.5% fewer false positives) with identical recall. TreeSHAP provides exact polynomial-time explanations. |
-| **How do you prevent data leakage?** | Stratified 80/20 split first. RobustScaler and SMOTE fitted strictly on the training fold. Test set is never seen during training or preprocessing. |
-| **Why PR-AUC instead of accuracy?** | Under 1.2% fraud rate, a naive model achieves 98.8% accuracy by predicting all-legitimate. PR-AUC is the gold standard for imbalanced classification. |
-| **Why not a fixed 0.50 threshold?** | Asymmetric costs (missed fraud >> false alarm) and tiered business logic require calibrated operational boundaries. Our three-tier system balances fraud interception with customer experience. |
-| **How fast are SHAP explanations?** | TreeSHAP achieves sub-30ms P95 latency, well within the 100ms authorization window. |
-| **What is the feedback loop?** | Cardholder APPROVE/DENY actions during MFA create ground-truth labels stored in the feedback table. The retraining script ingests these labels, augments the training set, retrains the model, and validates against quality gates before promotion. |
-| **What database do you use?** | SQLite for zero-friction local development, MySQL for Docker/production. SQLAlchemy ORM supports both transparently. |
-| **How is the frontend styled?** | Institutional banking design system: dark obsidian palette, Inter + JetBrains Mono typography, Lucide icons, zero emojis. Modeled after Stripe Radar and Goldman Sachs Marquee. |
+## 3. Summary of Key Achievements for Examination Defense
+* **Predictive Accuracy:** XGBoost model with `PR-AUC 0.9990`, `Recall 98.61%`, `Precision 97.93%` on an untouched 12,000-sample test set.
+* **Explainability:** Exact local TreeSHAP feature attributions on every screened transaction.
+* **Architecture:** 3-tier enterprise integration decoupling bank authentication from AI inference.
+* **Cambodian Relevance:** Support for Bakong KHQR, KHR/USD currency normalization, and realistic merchant geographies.
+* **Compliance & Security:** Multi-tenant anti-IDOR isolation, immutable audit logging, and zero-PII data minimization.
